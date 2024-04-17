@@ -1,0 +1,299 @@
+<html>
+<head>
+<title>hw3.ipynb</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #7a7e85;}
+.s1 { color: #bcbec4;}
+.s2 { color: #cf8e6d;}
+.s3 { color: #bcbec4;}
+.s4 { color: #2aacb8;}
+.s5 { color: #6aab73;}
+.ln { color: #4b5059; font-weight: normal; font-style: normal; }
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+hw3.ipynb</font>
+</center></td></tr></table>
+<pre><a name="l1"><span class="ln">1    </span></a><span class="s0">#%% md 
+<a name="l2"><span class="ln">2    </span></a></span><span class="s1">## I modified from my own homework for Prof. Tran's AE598RL course last term. The original code is here: https://github.com/uiuc-ae598-rl-2023-spring/hw1-dp-LXYYY.git 
+<a name="l3"><span class="ln">3    </span></a></span><span class="s0">#%% 
+<a name="l4"><span class="ln">4    </span></a></span><span class="s2">import </span><span class="s1">numpy </span><span class="s2">as </span><span class="s1">np</span>
+<a name="l5"><span class="ln">5    </span></a><span class="s0">#%% md 
+<a name="l6"><span class="ln">6    </span></a></span><span class="s1"># Problem 1 
+<a name="l7"><span class="ln">7    </span></a> 
+<a name="l8"><span class="ln">8    </span></a>## (a) 
+<a name="l9"><span class="ln">9    </span></a> 
+<a name="l10"><span class="ln">10   </span></a>Shown by the dynamic programming, the optimal policy is rather obvious in this question. Coin A is a `certain` coin, and so the policy is to always choose A when not reaching the 8 heads, and choose B afterward. In other words, the game is only dependent on the two B coin flips. And the win rate is 0.5^2=0.25. 
+<a name="l11"><span class="ln">11   </span></a></span><span class="s0">#%% 
+<a name="l12"><span class="ln">12   </span></a></span><span class="s2">def </span><span class="s1">coin_game_DP</span><span class="s3">():</span>
+<a name="l13"><span class="ln">13   </span></a>    <span class="s0"># Initialize the DP table; +1 for extra head counts and +1 for 0-based indexing</span>
+<a name="l14"><span class="ln">14   </span></a>    <span class="s1">dp </span><span class="s3">= [[</span><span class="s4">0 </span><span class="s2">for </span><span class="s1">_ </span><span class="s2">in </span><span class="s1">range</span><span class="s3">(</span><span class="s4">12</span><span class="s3">)] </span><span class="s2">for </span><span class="s1">_ </span><span class="s2">in</span>
+<a name="l15"><span class="ln">15   </span></a>          <span class="s1">range</span><span class="s3">(</span><span class="s4">11</span><span class="s3">)]  </span><span class="s0"># 11 for the number of flips (0-10), 12 for heads (0-11, with 9+ as loss)</span>
+<a name="l16"><span class="ln">16   </span></a>    <span class="s1">policy </span><span class="s3">= [[</span><span class="s5">'' </span><span class="s2">for </span><span class="s1">_ </span><span class="s2">in </span><span class="s1">range</span><span class="s3">(</span><span class="s4">12</span><span class="s3">)] </span><span class="s2">for </span><span class="s1">_ </span><span class="s2">in </span><span class="s1">range</span><span class="s3">(</span><span class="s4">11</span><span class="s3">)]</span>
+<a name="l17"><span class="ln">17   </span></a>
+<a name="l18"><span class="ln">18   </span></a>    <span class="s0"># Base cases</span>
+<a name="l19"><span class="ln">19   </span></a>    <span class="s1">dp</span><span class="s3">[</span><span class="s4">10</span><span class="s3">][</span><span class="s4">8</span><span class="s3">] = </span><span class="s4">1  </span><span class="s0"># Win condition if exactly 8 heads after 10 flips</span>
+<a name="l20"><span class="ln">20   </span></a>    <span class="s2">for </span><span class="s1">h </span><span class="s2">in </span><span class="s1">range</span><span class="s3">(</span><span class="s4">9</span><span class="s3">, </span><span class="s4">12</span><span class="s3">):  </span><span class="s0"># Lose condition if more than 8 heads</span>
+<a name="l21"><span class="ln">21   </span></a>        <span class="s1">dp</span><span class="s3">[</span><span class="s4">10</span><span class="s3">][</span><span class="s1">h</span><span class="s3">] = </span><span class="s4">0</span>
+<a name="l22"><span class="ln">22   </span></a>
+<a name="l23"><span class="ln">23   </span></a>    <span class="s0"># DP table fill</span>
+<a name="l24"><span class="ln">24   </span></a>    <span class="s2">for </span><span class="s1">n </span><span class="s2">in </span><span class="s1">range</span><span class="s3">(</span><span class="s4">9</span><span class="s3">, -</span><span class="s4">1</span><span class="s3">, -</span><span class="s4">1</span><span class="s3">):  </span><span class="s0"># From 9 down to 0 flips</span>
+<a name="l25"><span class="ln">25   </span></a>        <span class="s2">for </span><span class="s1">h </span><span class="s2">in </span><span class="s1">range</span><span class="s3">(</span><span class="s4">8</span><span class="s3">, -</span><span class="s4">1</span><span class="s3">, -</span><span class="s4">1</span><span class="s3">):  </span><span class="s0"># Up to 8 heads, inclusive</span>
+<a name="l26"><span class="ln">26   </span></a>            <span class="s0"># Coin A choice leads directly to the next state with one more head</span>
+<a name="l27"><span class="ln">27   </span></a>            <span class="s1">probA </span><span class="s3">= </span><span class="s1">dp</span><span class="s3">[</span><span class="s1">n </span><span class="s3">+ </span><span class="s4">1</span><span class="s3">][</span><span class="s1">min</span><span class="s3">(</span><span class="s1">h </span><span class="s3">+ </span><span class="s4">1</span><span class="s3">, </span><span class="s4">11</span><span class="s3">)]  </span><span class="s0"># min to cap heads at 11 (9+ considered as losing states)</span>
+<a name="l28"><span class="ln">28   </span></a>
+<a name="l29"><span class="ln">29   </span></a>            <span class="s0"># Coin B choice, with a fair chance of head or tail</span>
+<a name="l30"><span class="ln">30   </span></a>            <span class="s1">probB </span><span class="s3">= </span><span class="s4">0.5 </span><span class="s3">* </span><span class="s1">dp</span><span class="s3">[</span><span class="s1">n </span><span class="s3">+ </span><span class="s4">1</span><span class="s3">][</span><span class="s1">min</span><span class="s3">(</span><span class="s1">h </span><span class="s3">+ </span><span class="s4">1</span><span class="s3">, </span><span class="s4">11</span><span class="s3">)] + </span><span class="s4">0.5 </span><span class="s3">* </span><span class="s1">dp</span><span class="s3">[</span><span class="s1">n </span><span class="s3">+ </span><span class="s4">1</span><span class="s3">][</span><span class="s1">h</span><span class="s3">]</span>
+<a name="l31"><span class="ln">31   </span></a>
+<a name="l32"><span class="ln">32   </span></a>            <span class="s0"># Select the action with the higher expected probability</span>
+<a name="l33"><span class="ln">33   </span></a>            <span class="s2">if </span><span class="s1">probA </span><span class="s3">&gt; </span><span class="s1">probB</span><span class="s3">:</span>
+<a name="l34"><span class="ln">34   </span></a>                <span class="s1">dp</span><span class="s3">[</span><span class="s1">n</span><span class="s3">][</span><span class="s1">h</span><span class="s3">] = </span><span class="s1">probA</span>
+<a name="l35"><span class="ln">35   </span></a>                <span class="s1">policy</span><span class="s3">[</span><span class="s1">n</span><span class="s3">][</span><span class="s1">h</span><span class="s3">] = </span><span class="s5">'A'  </span><span class="s0"># Choose coin A</span>
+<a name="l36"><span class="ln">36   </span></a>            <span class="s2">else</span><span class="s3">:</span>
+<a name="l37"><span class="ln">37   </span></a>                <span class="s1">dp</span><span class="s3">[</span><span class="s1">n</span><span class="s3">][</span><span class="s1">h</span><span class="s3">] = </span><span class="s1">probB</span>
+<a name="l38"><span class="ln">38   </span></a>                <span class="s1">policy</span><span class="s3">[</span><span class="s1">n</span><span class="s3">][</span><span class="s1">h</span><span class="s3">] = </span><span class="s5">'B'  </span><span class="s0"># Choose coin B</span>
+<a name="l39"><span class="ln">39   </span></a>
+<a name="l40"><span class="ln">40   </span></a>    <span class="s0"># Reconstruct the policy path</span>
+<a name="l41"><span class="ln">41   </span></a>    <span class="s1">n</span><span class="s3">, </span><span class="s1">h </span><span class="s3">= </span><span class="s4">0</span><span class="s3">, </span><span class="s4">0</span>
+<a name="l42"><span class="ln">42   </span></a>    <span class="s1">path </span><span class="s3">= []</span>
+<a name="l43"><span class="ln">43   </span></a>    <span class="s2">while </span><span class="s1">n </span><span class="s3">&lt; </span><span class="s4">10</span><span class="s3">:</span>
+<a name="l44"><span class="ln">44   </span></a>        <span class="s1">decision </span><span class="s3">= </span><span class="s1">policy</span><span class="s3">[</span><span class="s1">n</span><span class="s3">][</span><span class="s1">h</span><span class="s3">]</span>
+<a name="l45"><span class="ln">45   </span></a>        <span class="s1">path</span><span class="s3">.</span><span class="s1">append</span><span class="s3">(</span><span class="s1">decision</span><span class="s3">)</span>
+<a name="l46"><span class="ln">46   </span></a>        <span class="s2">if </span><span class="s1">decision </span><span class="s3">== </span><span class="s5">'A'</span><span class="s3">:</span>
+<a name="l47"><span class="ln">47   </span></a>            <span class="s1">h </span><span class="s3">= </span><span class="s1">min</span><span class="s3">(</span><span class="s1">h </span><span class="s3">+ </span><span class="s4">1</span><span class="s3">, </span><span class="s4">11</span><span class="s3">)  </span><span class="s0"># Increment head count or cap</span>
+<a name="l48"><span class="ln">48   </span></a>        <span class="s1">n </span><span class="s3">+= </span><span class="s4">1</span>
+<a name="l49"><span class="ln">49   </span></a>
+<a name="l50"><span class="ln">50   </span></a>    <span class="s2">return </span><span class="s1">dp</span><span class="s3">[</span><span class="s4">0</span><span class="s3">][</span><span class="s4">0</span><span class="s3">], </span><span class="s1">path</span>
+<a name="l51"><span class="ln">51   </span></a>
+<a name="l52"><span class="ln">52   </span></a>
+<a name="l53"><span class="ln">53   </span></a><span class="s2">def </span><span class="s1">simulate_policy</span><span class="s3">(</span><span class="s1">policy</span><span class="s3">):</span>
+<a name="l54"><span class="ln">54   </span></a>    <span class="s1">probability </span><span class="s3">= </span><span class="s4">1.0  </span><span class="s0"># Start with 100% probability</span>
+<a name="l55"><span class="ln">55   </span></a>    <span class="s1">heads </span><span class="s3">= </span><span class="s4">0  </span><span class="s0"># Initial number of heads</span>
+<a name="l56"><span class="ln">56   </span></a>
+<a name="l57"><span class="ln">57   </span></a>    <span class="s0"># Simulate each decision in the policy</span>
+<a name="l58"><span class="ln">58   </span></a>    <span class="s2">for </span><span class="s1">n </span><span class="s2">in </span><span class="s1">range</span><span class="s3">(</span><span class="s4">10</span><span class="s3">):  </span><span class="s0"># For each flip</span>
+<a name="l59"><span class="ln">59   </span></a>        <span class="s1">decision </span><span class="s3">= </span><span class="s1">policy</span><span class="s3">[</span><span class="s1">n</span><span class="s3">]</span>
+<a name="l60"><span class="ln">60   </span></a>        <span class="s2">if </span><span class="s1">decision </span><span class="s3">== </span><span class="s5">'A'</span><span class="s3">:</span>
+<a name="l61"><span class="ln">61   </span></a>            <span class="s0"># Coin A (guaranteed head)</span>
+<a name="l62"><span class="ln">62   </span></a>            <span class="s1">heads </span><span class="s3">+= </span><span class="s4">1</span>
+<a name="l63"><span class="ln">63   </span></a>            <span class="s0"># Probability does not change as outcome is certain</span>
+<a name="l64"><span class="ln">64   </span></a>        <span class="s2">elif </span><span class="s1">decision </span><span class="s3">== </span><span class="s5">'B'</span><span class="s3">:</span>
+<a name="l65"><span class="ln">65   </span></a>            <span class="s0"># Coin B (fair coin, 50% head)</span>
+<a name="l66"><span class="ln">66   </span></a>            <span class="s2">if </span><span class="s1">heads </span><span class="s3">&lt; </span><span class="s4">8</span><span class="s3">:</span>
+<a name="l67"><span class="ln">67   </span></a>                <span class="s0"># Only if less than 8 heads, flipping coin B makes sense for trying to win</span>
+<a name="l68"><span class="ln">68   </span></a>                <span class="s1">probability </span><span class="s3">*= </span><span class="s4">0.5  </span><span class="s0"># Update probability for the uncertain outcome</span>
+<a name="l69"><span class="ln">69   </span></a>
+<a name="l70"><span class="ln">70   </span></a>        <span class="s0"># If at any point heads exceed 8, the game is lost, so probability is 0</span>
+<a name="l71"><span class="ln">71   </span></a>        <span class="s2">if </span><span class="s1">heads </span><span class="s3">&gt; </span><span class="s4">8</span><span class="s3">:</span>
+<a name="l72"><span class="ln">72   </span></a>            <span class="s2">return </span><span class="s4">0.0</span>
+<a name="l73"><span class="ln">73   </span></a>
+<a name="l74"><span class="ln">74   </span></a>    <span class="s0"># If exactly 8 heads, return the accumulated probability, else 0</span>
+<a name="l75"><span class="ln">75   </span></a>    <span class="s2">return </span><span class="s1">probability</span>
+<a name="l76"><span class="ln">76   </span></a>
+<a name="l77"><span class="ln">77   </span></a>
+<a name="l78"><span class="ln">78   </span></a><span class="s1">_</span><span class="s3">, </span><span class="s1">policy_path </span><span class="s3">= </span><span class="s1">coin_game_DP</span><span class="s3">()</span>
+<a name="l79"><span class="ln">79   </span></a><span class="s1">print</span><span class="s3">(</span><span class="s5">f&quot;Policy sequence: </span><span class="s2">{</span><span class="s1">policy_path</span><span class="s2">}</span><span class="s5">&quot;</span><span class="s3">)</span>
+<a name="l80"><span class="ln">80   </span></a><span class="s1">print</span><span class="s3">(</span><span class="s5">f&quot;Simulated win probability: </span><span class="s2">{</span><span class="s1">simulate_policy</span><span class="s3">(</span><span class="s1">policy_path</span><span class="s3">)</span><span class="s2">}</span><span class="s5">&quot;</span><span class="s3">)  </span><span class="s0"># Should match the DP result</span>
+<a name="l81"><span class="ln">81   </span></a>
+<a name="l82"><span class="ln">82   </span></a>
+<a name="l83"><span class="ln">83   </span></a><span class="s0">#%% md 
+<a name="l84"><span class="ln">84   </span></a></span><span class="s1"># Problem 2 
+<a name="l85"><span class="ln">85   </span></a> 
+<a name="l86"><span class="ln">86   </span></a>## My evaluation on the three policies: 
+<a name="l87"><span class="ln">87   </span></a> 
+<a name="l88"><span class="ln">88   </span></a>### (1) and (3) 
+<a name="l89"><span class="ln">89   </span></a>By my understanding, the first and third policy is not valid in this problem setup. Because if Q- and V- tables are trained in a fully observable MDP, the `locate` action then will make no benefit for the agent. And when we use the policy as the given styles, the agent will always intend to locate itself in the good state, with no knowledge it won't yield any reward. 
+<a name="l90"><span class="ln">90   </span></a> 
+<a name="l91"><span class="ln">91   </span></a>### (2) 
+<a name="l92"><span class="ln">92   </span></a>The second policy is a policy that will gives some rewards, because it always chooses between the actions rewarded in full observable MDP. 
+<a name="l93"><span class="ln">93   </span></a> 
+<a name="l94"><span class="ln">94   </span></a>and my evaluation shows the policy 1 and 3 give -1 average rewards, but random policy gives a very small but positive reward around 0.0004. 
+<a name="l95"><span class="ln">95   </span></a></span><span class="s0">#%% 
+<a name="l96"><span class="ln">96   </span></a></span><span class="s2">from </span><span class="s1">good_bad </span><span class="s2">import </span><span class="s1">GoodBad</span>
+<a name="l97"><span class="ln">97   </span></a>
+<a name="l98"><span class="ln">98   </span></a><span class="s1">env </span><span class="s3">= </span><span class="s1">GoodBad</span><span class="s3">()</span>
+<a name="l99"><span class="ln">99   </span></a>
+<a name="l100"><span class="ln">100  </span></a><span class="s0"># from models.policy_iteration.policy_iteration import learn</span>
+<a name="l101"><span class="ln">101  </span></a><span class="s2">from </span><span class="s1">models</span><span class="s3">.</span><span class="s1">value_iteration</span><span class="s3">.</span><span class="s1">value_iteration </span><span class="s2">import </span><span class="s1">learn</span>
+<a name="l102"><span class="ln">102  </span></a>
+<a name="l103"><span class="ln">103  </span></a><span class="s0"># from models.q_learning.q_learning import learn</span>
+<a name="l104"><span class="ln">104  </span></a><span class="s1">model </span><span class="s3">= </span><span class="s1">learn</span><span class="s3">(</span><span class="s1">env</span><span class="s3">, </span><span class="s1">scene</span><span class="s3">=</span><span class="s5">&quot;good_bad&quot;</span><span class="s3">, </span><span class="s1">max_it</span><span class="s3">=</span><span class="s4">1000</span><span class="s3">, </span><span class="s1">gamma</span><span class="s3">=</span><span class="s4">0.95</span><span class="s3">, </span><span class="s1">epsilon</span><span class="s3">=</span><span class="s4">0.3</span><span class="s3">, </span><span class="s1">alpha</span><span class="s3">=</span><span class="s4">0.2</span><span class="s3">)</span>
+<a name="l105"><span class="ln">105  </span></a><span class="s0">#%% 
+<a name="l106"><span class="ln">106  </span></a></span><span class="s2">import </span><span class="s1">numpy </span><span class="s2">as </span><span class="s1">np</span>
+<a name="l107"><span class="ln">107  </span></a>
+<a name="l108"><span class="ln">108  </span></a><span class="s1">s </span><span class="s3">= </span><span class="s1">env</span><span class="s3">.</span><span class="s1">reset</span><span class="s3">()</span>
+<a name="l109"><span class="ln">109  </span></a>
+<a name="l110"><span class="ln">110  </span></a><span class="s1">max_sim_steps </span><span class="s3">= </span><span class="s4">10000</span>
+<a name="l111"><span class="ln">111  </span></a>
+<a name="l112"><span class="ln">112  </span></a><span class="s2">from </span><span class="s1">models</span><span class="s3">.</span><span class="s1">base_model </span><span class="s2">import </span><span class="s1">ModelBasedAlg</span>
+<a name="l113"><span class="ln">113  </span></a>
+<a name="l114"><span class="ln">114  </span></a>
+<a name="l115"><span class="ln">115  </span></a><span class="s2">def </span><span class="s1">get_action_from_belief</span><span class="s3">(</span><span class="s1">model</span><span class="s3">: </span><span class="s1">ModelBasedAlg</span><span class="s3">, </span><span class="s1">b</span><span class="s3">, </span><span class="s1">s</span><span class="s3">, </span><span class="s1">random</span><span class="s3">):</span>
+<a name="l116"><span class="ln">116  </span></a>    <span class="s1">v0 </span><span class="s3">= </span><span class="s1">model</span><span class="s3">.</span><span class="s1">get_values</span><span class="s3">(</span><span class="s4">0</span><span class="s3">)</span>
+<a name="l117"><span class="ln">117  </span></a>    <span class="s1">v1 </span><span class="s3">= </span><span class="s1">model</span><span class="s3">.</span><span class="s1">get_values</span><span class="s3">(</span><span class="s4">1</span><span class="s3">)</span>
+<a name="l118"><span class="ln">118  </span></a>    <span class="s2">if </span><span class="s1">random</span><span class="s3">:</span>
+<a name="l119"><span class="ln">119  </span></a>        <span class="s1">model_policy_0 </span><span class="s3">= </span><span class="s1">model</span><span class="s3">.</span><span class="s1">get_policy</span><span class="s3">(</span><span class="s4">0</span><span class="s3">)</span>
+<a name="l120"><span class="ln">120  </span></a>        <span class="s1">model_policy_1 </span><span class="s3">= </span><span class="s1">model</span><span class="s3">.</span><span class="s1">get_policy</span><span class="s3">(</span><span class="s4">1</span><span class="s3">)</span>
+<a name="l121"><span class="ln">121  </span></a>        <span class="s2">return </span><span class="s1">np</span><span class="s3">.</span><span class="s1">random</span><span class="s3">.</span><span class="s1">choice</span><span class="s3">([</span><span class="s1">model_policy_0</span><span class="s3">, </span><span class="s1">model_policy_1</span><span class="s3">], </span><span class="s1">p</span><span class="s3">=</span><span class="s1">b</span><span class="s3">)</span>
+<a name="l122"><span class="ln">122  </span></a>    <span class="s2">else</span><span class="s3">:</span>
+<a name="l123"><span class="ln">123  </span></a>        <span class="s0"># try all action</span>
+<a name="l124"><span class="ln">124  </span></a>        <span class="s1">max_value </span><span class="s3">= -</span><span class="s1">np</span><span class="s3">.</span><span class="s1">inf</span>
+<a name="l125"><span class="ln">125  </span></a>        <span class="s1">best_action </span><span class="s3">= </span><span class="s2">None</span>
+<a name="l126"><span class="ln">126  </span></a>        <span class="s2">for </span><span class="s1">a </span><span class="s2">in </span><span class="s3">[</span><span class="s4">0</span><span class="s3">, </span><span class="s4">1</span><span class="s3">, </span><span class="s4">2</span><span class="s3">]:</span>
+<a name="l127"><span class="ln">127  </span></a>            <span class="s1">new_b </span><span class="s3">= </span><span class="s1">model</span><span class="s3">.</span><span class="s1">update_belief</span><span class="s3">(</span><span class="s1">s</span><span class="s3">, </span><span class="s1">b</span><span class="s3">, </span><span class="s1">a</span><span class="s3">)</span>
+<a name="l128"><span class="ln">128  </span></a>            <span class="s1">new_value </span><span class="s3">= </span><span class="s1">new_b</span><span class="s3">[</span><span class="s4">0</span><span class="s3">] * </span><span class="s1">v0 </span><span class="s3">+ </span><span class="s1">new_b</span><span class="s3">[</span><span class="s4">1</span><span class="s3">] * </span><span class="s1">v1</span>
+<a name="l129"><span class="ln">129  </span></a>            <span class="s2">if </span><span class="s1">new_value </span><span class="s3">&gt; </span><span class="s1">max_value</span><span class="s3">:</span>
+<a name="l130"><span class="ln">130  </span></a>                <span class="s1">max_value </span><span class="s3">= </span><span class="s1">new_value</span>
+<a name="l131"><span class="ln">131  </span></a>                <span class="s1">best_action </span><span class="s3">= </span><span class="s1">a</span>
+<a name="l132"><span class="ln">132  </span></a>        <span class="s2">return </span><span class="s1">best_action</span>
+<a name="l133"><span class="ln">133  </span></a>
+<a name="l134"><span class="ln">134  </span></a><span class="s1">env</span><span class="s3">.</span><span class="s1">max_num_steps</span><span class="s3">=</span><span class="s1">max_sim_steps</span>
+<a name="l135"><span class="ln">135  </span></a><span class="s1">max_sims</span><span class="s3">=</span><span class="s4">100000</span>
+<a name="l136"><span class="ln">136  </span></a>
+<a name="l137"><span class="ln">137  </span></a><span class="s1">b </span><span class="s3">= </span><span class="s1">np</span><span class="s3">.</span><span class="s1">asarray</span><span class="s3">([</span><span class="s4">1</span><span class="s3">, </span><span class="s4">0</span><span class="s3">])</span>
+<a name="l138"><span class="ln">138  </span></a><span class="s1">r_record</span><span class="s3">=[]</span>
+<a name="l139"><span class="ln">139  </span></a><span class="s2">for </span><span class="s1">experiment </span><span class="s2">in </span><span class="s1">range</span><span class="s3">(</span><span class="s1">max_sims</span><span class="s3">*</span><span class="s4">10</span><span class="s3">):</span>
+<a name="l140"><span class="ln">140  </span></a>    <span class="s1">r_sum </span><span class="s3">= </span><span class="s4">0</span>
+<a name="l141"><span class="ln">141  </span></a>    <span class="s2">for </span><span class="s1">i </span><span class="s2">in </span><span class="s1">range</span><span class="s3">(</span><span class="s1">max_sim_steps</span><span class="s3">):</span>
+<a name="l142"><span class="ln">142  </span></a>        <span class="s1">a </span><span class="s3">= </span><span class="s1">get_action_from_belief</span><span class="s3">(</span><span class="s1">model</span><span class="s3">, </span><span class="s1">b</span><span class="s3">, </span><span class="s1">s</span><span class="s3">, </span><span class="s1">random</span><span class="s3">=</span><span class="s2">False</span><span class="s3">)</span>
+<a name="l143"><span class="ln">143  </span></a>        <span class="s1">b </span><span class="s3">= </span><span class="s1">model</span><span class="s3">.</span><span class="s1">update_belief</span><span class="s3">(</span><span class="s1">s</span><span class="s3">, </span><span class="s1">b</span><span class="s3">, </span><span class="s1">a</span><span class="s3">)</span>
+<a name="l144"><span class="ln">144  </span></a>        <span class="s1">s1</span><span class="s3">, </span><span class="s1">r</span><span class="s3">, </span><span class="s1">done </span><span class="s3">= </span><span class="s1">env</span><span class="s3">.</span><span class="s1">step</span><span class="s3">(</span><span class="s1">a</span><span class="s3">)</span>
+<a name="l145"><span class="ln">145  </span></a>        <span class="s1">r_sum </span><span class="s3">+= </span><span class="s1">r</span>
+<a name="l146"><span class="ln">146  </span></a>        <span class="s1">s </span><span class="s3">= </span><span class="s1">s1</span>
+<a name="l147"><span class="ln">147  </span></a>        <span class="s2">if </span><span class="s1">done</span><span class="s3">:</span>
+<a name="l148"><span class="ln">148  </span></a>            <span class="s1">r_record</span><span class="s3">.</span><span class="s1">append</span><span class="s3">(</span><span class="s1">r_sum</span><span class="s3">)</span>
+<a name="l149"><span class="ln">149  </span></a>            <span class="s2">break</span>
+<a name="l150"><span class="ln">150  </span></a><span class="s1">print</span><span class="s3">(</span><span class="s5">f&quot;Average reward with policy (1): </span><span class="s2">{</span><span class="s1">np</span><span class="s3">.</span><span class="s1">mean</span><span class="s3">(</span><span class="s1">r_record</span><span class="s3">)</span><span class="s2">}</span><span class="s5">&quot;</span><span class="s3">)</span>
+<a name="l151"><span class="ln">151  </span></a>
+<a name="l152"><span class="ln">152  </span></a><span class="s1">s </span><span class="s3">= </span><span class="s1">env</span><span class="s3">.</span><span class="s1">reset</span><span class="s3">()</span>
+<a name="l153"><span class="ln">153  </span></a><span class="s1">r_sum </span><span class="s3">= </span><span class="s4">0</span>
+<a name="l154"><span class="ln">154  </span></a><span class="s1">b </span><span class="s3">= </span><span class="s1">np</span><span class="s3">.</span><span class="s1">asarray</span><span class="s3">([</span><span class="s4">1</span><span class="s3">, </span><span class="s4">0</span><span class="s3">])</span>
+<a name="l155"><span class="ln">155  </span></a><span class="s1">r_record</span><span class="s3">=[]</span>
+<a name="l156"><span class="ln">156  </span></a><span class="s2">for </span><span class="s1">experiment </span><span class="s2">in </span><span class="s1">range</span><span class="s3">(</span><span class="s1">max_sims</span><span class="s3">*</span><span class="s4">10</span><span class="s3">):</span>
+<a name="l157"><span class="ln">157  </span></a>    <span class="s1">r_sum </span><span class="s3">= </span><span class="s4">0</span>
+<a name="l158"><span class="ln">158  </span></a>    <span class="s2">for </span><span class="s1">i </span><span class="s2">in </span><span class="s1">range</span><span class="s3">(</span><span class="s1">max_sim_steps</span><span class="s3">):</span>
+<a name="l159"><span class="ln">159  </span></a>        <span class="s1">a </span><span class="s3">= </span><span class="s1">get_action_from_belief</span><span class="s3">(</span><span class="s1">model</span><span class="s3">, </span><span class="s1">b</span><span class="s3">, </span><span class="s1">s</span><span class="s3">, </span><span class="s1">random</span><span class="s3">=</span><span class="s2">True</span><span class="s3">)</span>
+<a name="l160"><span class="ln">160  </span></a>        <span class="s1">b </span><span class="s3">= </span><span class="s1">model</span><span class="s3">.</span><span class="s1">update_belief</span><span class="s3">(</span><span class="s1">s</span><span class="s3">, </span><span class="s1">b</span><span class="s3">, </span><span class="s1">a</span><span class="s3">)</span>
+<a name="l161"><span class="ln">161  </span></a>        <span class="s1">s1</span><span class="s3">, </span><span class="s1">r</span><span class="s3">, </span><span class="s1">done </span><span class="s3">= </span><span class="s1">env</span><span class="s3">.</span><span class="s1">step</span><span class="s3">(</span><span class="s1">a</span><span class="s3">)</span>
+<a name="l162"><span class="ln">162  </span></a>        <span class="s1">r_sum </span><span class="s3">+= </span><span class="s1">r</span>
+<a name="l163"><span class="ln">163  </span></a>        <span class="s1">s </span><span class="s3">= </span><span class="s1">s1</span>
+<a name="l164"><span class="ln">164  </span></a>        <span class="s2">if </span><span class="s1">done</span><span class="s3">:</span>
+<a name="l165"><span class="ln">165  </span></a>            <span class="s1">r_record</span><span class="s3">.</span><span class="s1">append</span><span class="s3">(</span><span class="s1">r_sum</span><span class="s3">)</span>
+<a name="l166"><span class="ln">166  </span></a>            <span class="s2">break</span>
+<a name="l167"><span class="ln">167  </span></a><span class="s1">print</span><span class="s3">(</span><span class="s5">f&quot;Total reward with policy (2): </span><span class="s2">{</span><span class="s1">np</span><span class="s3">.</span><span class="s1">mean</span><span class="s3">(</span><span class="s1">r_record</span><span class="s3">)</span><span class="s2">}</span><span class="s5">&quot;</span><span class="s3">)</span>
+<a name="l168"><span class="ln">168  </span></a><span class="s0">#%% 
+<a name="l169"><span class="ln">169  </span></a></span><span class="s2">from </span><span class="s1">models</span><span class="s3">.</span><span class="s1">q_learning</span><span class="s3">.</span><span class="s1">q_learning </span><span class="s2">import </span><span class="s1">learn </span><span class="s2">as </span><span class="s1">q_learn</span>
+<a name="l170"><span class="ln">170  </span></a><span class="s2">from </span><span class="s1">models</span><span class="s3">.</span><span class="s1">q_learning</span><span class="s3">.</span><span class="s1">q_learning </span><span class="s2">import </span><span class="s1">PRECISE</span>
+<a name="l171"><span class="ln">171  </span></a><span class="s2">from </span><span class="s1">good_bad </span><span class="s2">import </span><span class="s1">GoodBad</span>
+<a name="l172"><span class="ln">172  </span></a>
+<a name="l173"><span class="ln">173  </span></a><span class="s1">env </span><span class="s3">= </span><span class="s1">GoodBad</span><span class="s3">(</span><span class="s4">100</span><span class="s3">)</span>
+<a name="l174"><span class="ln">174  </span></a><span class="s1">model </span><span class="s3">= </span><span class="s1">q_learn</span><span class="s3">(</span><span class="s1">env</span><span class="s3">, </span><span class="s1">scene</span><span class="s3">=</span><span class="s5">&quot;good_bad&quot;</span><span class="s3">, </span><span class="s1">max_it</span><span class="s3">=</span><span class="s4">1000</span><span class="s3">, </span><span class="s1">gamma</span><span class="s3">=</span><span class="s4">0.9</span><span class="s3">, </span><span class="s1">epsilon</span><span class="s3">=</span><span class="s4">0.3</span><span class="s3">, </span><span class="s1">alpha</span><span class="s3">=</span><span class="s4">0.1</span><span class="s3">, </span><span class="s1">obs_mode</span><span class="s3">=</span><span class="s1">PRECISE</span><span class="s3">)</span>
+<a name="l175"><span class="ln">175  </span></a><span class="s0">#%% 
+<a name="l176"><span class="ln">176  </span></a></span><span class="s2">import </span><span class="s1">numpy </span><span class="s2">as </span><span class="s1">np</span>
+<a name="l177"><span class="ln">177  </span></a><span class="s2">from </span><span class="s1">models</span><span class="s3">.</span><span class="s1">base_model </span><span class="s2">import </span><span class="s1">ModelFreeAlg</span>
+<a name="l178"><span class="ln">178  </span></a>
+<a name="l179"><span class="ln">179  </span></a><span class="s2">def </span><span class="s1">get_action_from_belief</span><span class="s3">(</span><span class="s1">model</span><span class="s3">: </span><span class="s1">ModelFreeAlg</span><span class="s3">, </span><span class="s1">b </span><span class="s3">):</span>
+<a name="l180"><span class="ln">180  </span></a>    <span class="s1">Q0</span><span class="s3">= </span><span class="s1">model</span><span class="s3">.</span><span class="s1">get_Q</span><span class="s3">(</span><span class="s4">0</span><span class="s3">)</span>
+<a name="l181"><span class="ln">181  </span></a>    <span class="s1">Q1</span><span class="s3">= </span><span class="s1">model</span><span class="s3">.</span><span class="s1">get_Q</span><span class="s3">(</span><span class="s4">1</span><span class="s3">)</span>
+<a name="l182"><span class="ln">182  </span></a>    <span class="s1">b_Q0</span><span class="s3">=</span><span class="s1">b</span><span class="s3">[</span><span class="s4">0</span><span class="s3">]*</span><span class="s1">Q0</span>
+<a name="l183"><span class="ln">183  </span></a>    <span class="s1">b_Q1</span><span class="s3">=</span><span class="s1">b</span><span class="s3">[</span><span class="s4">1</span><span class="s3">]*</span><span class="s1">Q1</span>
+<a name="l184"><span class="ln">184  </span></a>    <span class="s1">b_Q_sum</span><span class="s3">=</span><span class="s1">b_Q0</span><span class="s3">+</span><span class="s1">b_Q1</span>
+<a name="l185"><span class="ln">185  </span></a>    <span class="s0"># find the action with the highest value</span>
+<a name="l186"><span class="ln">186  </span></a>    <span class="s1">best_action</span><span class="s3">=</span><span class="s2">None</span>
+<a name="l187"><span class="ln">187  </span></a>    <span class="s1">highest_value</span><span class="s3">=-</span><span class="s1">np</span><span class="s3">.</span><span class="s1">inf</span>
+<a name="l188"><span class="ln">188  </span></a>    <span class="s2">for </span><span class="s1">a </span><span class="s2">in </span><span class="s3">[</span><span class="s4">0</span><span class="s3">, </span><span class="s4">1</span><span class="s3">, </span><span class="s4">2</span><span class="s3">]:</span>
+<a name="l189"><span class="ln">189  </span></a>        <span class="s2">if </span><span class="s1">b_Q_sum</span><span class="s3">[</span><span class="s1">a</span><span class="s3">]&gt;</span><span class="s1">highest_value</span><span class="s3">:</span>
+<a name="l190"><span class="ln">190  </span></a>            <span class="s1">highest_value</span><span class="s3">=</span><span class="s1">b_Q_sum</span><span class="s3">[</span><span class="s1">a</span><span class="s3">]</span>
+<a name="l191"><span class="ln">191  </span></a>            <span class="s1">best_action</span><span class="s3">=</span><span class="s1">a</span>
+<a name="l192"><span class="ln">192  </span></a>    <span class="s2">return </span><span class="s1">best_action</span>
+<a name="l193"><span class="ln">193  </span></a>        
+<a name="l194"><span class="ln">194  </span></a><span class="s1">env</span><span class="s3">.</span><span class="s1">max_num_steps</span><span class="s3">=</span><span class="s4">10000</span>
+<a name="l195"><span class="ln">195  </span></a>    
+<a name="l196"><span class="ln">196  </span></a><span class="s1">s </span><span class="s3">= </span><span class="s1">env</span><span class="s3">.</span><span class="s1">reset</span><span class="s3">()</span>
+<a name="l197"><span class="ln">197  </span></a><span class="s1">b </span><span class="s3">= </span><span class="s1">np</span><span class="s3">.</span><span class="s1">asarray</span><span class="s3">([</span><span class="s4">1</span><span class="s3">, </span><span class="s4">0</span><span class="s3">])</span>
+<a name="l198"><span class="ln">198  </span></a><span class="s1">r_record</span><span class="s3">=[]</span>
+<a name="l199"><span class="ln">199  </span></a><span class="s2">for </span><span class="s1">experiment </span><span class="s2">in </span><span class="s1">range</span><span class="s3">(</span><span class="s1">max_sims</span><span class="s3">*</span><span class="s4">10</span><span class="s3">):</span>
+<a name="l200"><span class="ln">200  </span></a>    <span class="s1">r_sum </span><span class="s3">= </span><span class="s4">0</span>
+<a name="l201"><span class="ln">201  </span></a>    <span class="s2">for </span><span class="s1">i </span><span class="s2">in </span><span class="s1">range</span><span class="s3">(</span><span class="s1">max_sim_steps</span><span class="s3">):</span>
+<a name="l202"><span class="ln">202  </span></a>        <span class="s1">a </span><span class="s3">= </span><span class="s1">get_action_from_belief</span><span class="s3">(</span><span class="s1">model</span><span class="s3">, </span><span class="s1">b</span><span class="s3">)</span>
+<a name="l203"><span class="ln">203  </span></a>        <span class="s1">b</span><span class="s3">=</span><span class="s1">model</span><span class="s3">.</span><span class="s1">update_belief</span><span class="s3">(</span><span class="s1">s</span><span class="s3">, </span><span class="s1">b</span><span class="s3">, </span><span class="s1">a</span><span class="s3">)</span>
+<a name="l204"><span class="ln">204  </span></a>        <span class="s1">s1</span><span class="s3">, </span><span class="s1">r</span><span class="s3">, </span><span class="s1">done </span><span class="s3">= </span><span class="s1">env</span><span class="s3">.</span><span class="s1">step</span><span class="s3">(</span><span class="s1">a</span><span class="s3">)</span>
+<a name="l205"><span class="ln">205  </span></a>        <span class="s1">r_sum </span><span class="s3">+= </span><span class="s1">r</span>
+<a name="l206"><span class="ln">206  </span></a>        <span class="s1">s </span><span class="s3">= </span><span class="s1">s1</span>
+<a name="l207"><span class="ln">207  </span></a>        <span class="s2">if </span><span class="s1">done</span><span class="s3">:</span>
+<a name="l208"><span class="ln">208  </span></a>            <span class="s1">r_record</span><span class="s3">.</span><span class="s1">append</span><span class="s3">(</span><span class="s1">r_sum</span><span class="s3">)</span>
+<a name="l209"><span class="ln">209  </span></a>            <span class="s2">break</span>
+<a name="l210"><span class="ln">210  </span></a><span class="s1">print</span><span class="s3">(</span><span class="s5">f&quot;Total reward with policy (1): </span><span class="s2">{</span><span class="s1">r_sum</span><span class="s2">}</span><span class="s5">&quot;</span><span class="s3">)</span>
+<a name="l211"><span class="ln">211  </span></a><span class="s0">#%% md 
+<a name="l212"><span class="ln">212  </span></a></span><span class="s1"># Problem 3: 
+<a name="l213"><span class="ln">213  </span></a> 
+<a name="l214"><span class="ln">214  </span></a>## (a) 
+<a name="l215"><span class="ln">215  </span></a> 
+<a name="l216"><span class="ln">216  </span></a>Firstly I defined this `MountainGridWorld` class to simulate the game. I chose an implementation which I believe is close to real world setup. I defined the step output of the game as `groundtruth state, reward, done, noisey state observation, and confidence`, where the ground truth state is only for bookkeeping, not used during training. The confidence is computed from the altitude of the ground truth state. 
+<a name="l217"><span class="ln">217  </span></a> 
+<a name="l218"><span class="ln">218  </span></a>The reward is defined as such: if the agent reaches the goal, the reward is 100, and game is `done`. If an unfeasible action is taken, the reward is -10, and cause the game to be `done`. Other intermediate steps are time-penalised by -1. For simplicity, the agent itself doesn't know which action direction is not feasible, it has to learn from the environment. 
+<a name="l219"><span class="ln">219  </span></a> 
+<a name="l220"><span class="ln">220  </span></a>Then I discretize the confidence as a resolution of 0.1 and then combined the observed state and confidence into a single state representation, which has `49*10=490` states. 
+<a name="l221"><span class="ln">221  </span></a> 
+<a name="l222"><span class="ln">222  </span></a>Then I trained the policy with Q-learning approach, with the state space as aforementioned, 490 states, and 4 actions, where the reward of each step follows the method given in the lecture, where the rewards of belief is computed based on the distribution of the uncertainty. A epsilon-exploration approach is also applied, i.e. during training, there is 0.3 of chance to take a random action.  
+<a name="l223"><span class="ln">223  </span></a> 
+<a name="l224"><span class="ln">224  </span></a>For inference, I simply take the action with the highest value in the Q-table, where the state is combined observation-confidence state. 
+<a name="l225"><span class="ln">225  </span></a> 
+<a name="l226"><span class="ln">226  </span></a>## (b) 
+<a name="l227"><span class="ln">227  </span></a> 
+<a name="l228"><span class="ln">228  </span></a>My opinion on the optimality of my approach, is that the usage of belief-aware Q-table and reward distribution is a good approach. And there is no &quot;locate&quot; action in this simple game, I believe my approach is sufficient. However, my implementation can be improved by the following ways: 
+<a name="l229"><span class="ln">229  </span></a>1. One can consider to use a continuous state space, instead of discretization of the belief. But given the uncertainty is inherently discrete, and it's not accumulating because it's GPS-like, I believe the discretization is a good choice. 
+<a name="l230"><span class="ln">230  </span></a>2. the belief can have more dimension, e.g. a 2d distribution instead of a single-value confidence. But in this game, the uncertainty is isotropic, so a single value should be enough. 
+<a name="l231"><span class="ln">231  </span></a>3. given the fact the uncertainty of the game is between a few discrete values, the discretization can be more tailored, which should be a valid improvement 
+<a name="l232"><span class="ln">232  </span></a> 
+<a name="l233"><span class="ln">233  </span></a>## (c) 
+<a name="l234"><span class="ln">234  </span></a> 
+<a name="l235"><span class="ln">235  </span></a>I evaluated my model by running 10000 experiments, and the average number of steps is: ``14.227``. Meanwhile, I found the training is a bit sensitive to the hyperparameters, e.g. with lower discount factor and alpha, I got around 25 steps, and around 1% fail rate, and the best experiment, once I got around 9 steps average, which however, failed to reproduce. 
+<a name="l236"><span class="ln">236  </span></a></span><span class="s0">#%% 
+<a name="l237"><span class="ln">237  </span></a></span><span class="s2">from </span><span class="s1">mountain_gridworld </span><span class="s2">import </span><span class="s1">MountainGridWorld</span>
+<a name="l238"><span class="ln">238  </span></a>
+<a name="l239"><span class="ln">239  </span></a><span class="s1">env </span><span class="s3">= </span><span class="s1">MountainGridWorld</span><span class="s3">()</span>
+<a name="l240"><span class="ln">240  </span></a>
+<a name="l241"><span class="ln">241  </span></a><span class="s2">from </span><span class="s1">models</span><span class="s3">.</span><span class="s1">q_learning</span><span class="s3">.</span><span class="s1">q_learning </span><span class="s2">import </span><span class="s1">learn </span><span class="s2">as </span><span class="s1">q_learn</span>
+<a name="l242"><span class="ln">242  </span></a><span class="s2">from </span><span class="s1">models</span><span class="s3">.</span><span class="s1">q_learning</span><span class="s3">.</span><span class="s1">q_learning </span><span class="s2">import </span><span class="s1">PRECISE</span><span class="s3">, </span><span class="s1">NOISY</span>
+<a name="l243"><span class="ln">243  </span></a>
+<a name="l244"><span class="ln">244  </span></a><span class="s1">model </span><span class="s3">= </span><span class="s1">q_learn</span><span class="s3">(</span><span class="s1">env</span><span class="s3">, </span><span class="s1">scene</span><span class="s3">=</span><span class="s5">&quot;mountain_gridworld&quot;</span><span class="s3">, </span><span class="s1">max_it</span><span class="s3">=</span><span class="s4">100000</span><span class="s3">, </span><span class="s1">gamma</span><span class="s3">=</span><span class="s4">0.95</span><span class="s3">, </span><span class="s1">epsilon</span><span class="s3">=</span><span class="s4">0.3</span><span class="s3">, </span><span class="s1">alpha</span><span class="s3">=</span><span class="s4">0.2</span><span class="s3">, </span><span class="s1">obs_mode</span><span class="s3">=</span><span class="s1">NOISY</span><span class="s3">)</span>
+<a name="l245"><span class="ln">245  </span></a><span class="s0">#%% 
+<a name="l246"><span class="ln">246  </span></a></span><span class="s2">from </span><span class="s1">models</span><span class="s3">.</span><span class="s1">q_learning</span><span class="s3">.</span><span class="s1">q_learning </span><span class="s2">import </span><span class="s1">discretize_state_and_confidence</span><span class="s3">, </span><span class="s1">DISCRETIZATION_RESOLUTION</span>
+<a name="l247"><span class="ln">247  </span></a><span class="s2">import </span><span class="s1">numpy </span><span class="s2">as </span><span class="s1">np</span>
+<a name="l248"><span class="ln">248  </span></a>
+<a name="l249"><span class="ln">249  </span></a><span class="s1">time_cost</span><span class="s3">=[]</span>
+<a name="l250"><span class="ln">250  </span></a><span class="s1">num_fails</span><span class="s3">=</span><span class="s4">0</span>
+<a name="l251"><span class="ln">251  </span></a><span class="s2">for </span><span class="s1">experiment </span><span class="s2">in </span><span class="s1">range</span><span class="s3">(</span><span class="s4">10000</span><span class="s3">):</span>
+<a name="l252"><span class="ln">252  </span></a>    <span class="s0"># test</span>
+<a name="l253"><span class="ln">253  </span></a>    <span class="s1">s </span><span class="s3">= </span><span class="s1">env</span><span class="s3">.</span><span class="s1">reset</span><span class="s3">()</span>
+<a name="l254"><span class="ln">254  </span></a>    <span class="s1">obs </span><span class="s3">= </span><span class="s1">s</span>
+<a name="l255"><span class="ln">255  </span></a>    <span class="s1">confidence </span><span class="s3">= </span><span class="s4">1</span>
+<a name="l256"><span class="ln">256  </span></a>    <span class="s1">r_sum </span><span class="s3">= </span><span class="s4">0</span>
+<a name="l257"><span class="ln">257  </span></a>    <span class="s1">num_step</span><span class="s3">=</span><span class="s4">0</span>
+<a name="l258"><span class="ln">258  </span></a>    <span class="s2">for </span><span class="s1">i </span><span class="s2">in </span><span class="s1">range</span><span class="s3">(</span><span class="s4">100</span><span class="s3">):</span>
+<a name="l259"><span class="ln">259  </span></a>        <span class="s1">s_obs_and_confidence </span><span class="s3">= </span><span class="s1">discretize_state_and_confidence</span><span class="s3">(</span><span class="s1">obs</span><span class="s3">, </span><span class="s1">confidence</span><span class="s3">)</span>
+<a name="l260"><span class="ln">260  </span></a>        <span class="s1">a </span><span class="s3">= </span><span class="s1">model</span><span class="s3">.</span><span class="s1">get_policy</span><span class="s3">(</span><span class="s1">s_obs_and_confidence</span><span class="s3">)</span>
+<a name="l261"><span class="ln">261  </span></a>        <span class="s1">s1</span><span class="s3">, </span><span class="s1">r</span><span class="s3">, </span><span class="s1">done</span><span class="s3">, </span><span class="s1">obs</span><span class="s3">, </span><span class="s1">confidence </span><span class="s3">= </span><span class="s1">env</span><span class="s3">.</span><span class="s1">step</span><span class="s3">(</span><span class="s1">a</span><span class="s3">)</span>
+<a name="l262"><span class="ln">262  </span></a>        <span class="s1">r_sum </span><span class="s3">+= </span><span class="s1">r</span>
+<a name="l263"><span class="ln">263  </span></a>        <span class="s1">s </span><span class="s3">= </span><span class="s1">s1</span>
+<a name="l264"><span class="ln">264  </span></a>        <span class="s1">num_step</span><span class="s3">+=</span><span class="s4">1</span>
+<a name="l265"><span class="ln">265  </span></a>        <span class="s2">if </span><span class="s1">done </span><span class="s2">or </span><span class="s1">i</span><span class="s3">==</span><span class="s4">99</span><span class="s3">:</span>
+<a name="l266"><span class="ln">266  </span></a>            <span class="s2">if </span><span class="s1">r_sum</span><span class="s3">&gt;</span><span class="s4">0</span><span class="s3">: </span><span class="s0"># if the agent reaches the goal</span>
+<a name="l267"><span class="ln">267  </span></a>                <span class="s1">time_cost</span><span class="s3">.</span><span class="s1">append</span><span class="s3">(</span><span class="s1">num_step</span><span class="s3">)</span>
+<a name="l268"><span class="ln">268  </span></a>            <span class="s2">else</span><span class="s3">:</span>
+<a name="l269"><span class="ln">269  </span></a>                <span class="s1">num_fails</span><span class="s3">+=</span><span class="s4">1</span>
+<a name="l270"><span class="ln">270  </span></a>                <span class="s1">time_cost</span><span class="s3">.</span><span class="s1">append</span><span class="s3">(</span><span class="s4">100</span><span class="s3">)</span>
+<a name="l271"><span class="ln">271  </span></a>                <span class="s2">break</span>
+<a name="l272"><span class="ln">272  </span></a>            <span class="s2">break</span>
+<a name="l273"><span class="ln">273  </span></a>    <span class="s2">if </span><span class="s1">experiment</span><span class="s3">%</span><span class="s4">500</span><span class="s3">==</span><span class="s4">0</span><span class="s3">:</span>
+<a name="l274"><span class="ln">274  </span></a>        <span class="s1">print</span><span class="s3">(</span><span class="s5">f&quot;Total reward for experiment </span><span class="s2">{</span><span class="s1">experiment</span><span class="s2">}</span><span class="s5">: </span><span class="s2">{</span><span class="s1">r_sum</span><span class="s2">}</span><span class="s5">&quot;</span><span class="s3">)</span>
+<a name="l275"><span class="ln">275  </span></a><span class="s1">print</span><span class="s3">(</span><span class="s5">f&quot;Average time cost: </span><span class="s2">{</span><span class="s1">np</span><span class="s3">.</span><span class="s1">mean</span><span class="s3">(</span><span class="s1">time_cost</span><span class="s3">)</span><span class="s2">}</span><span class="s5">&quot;</span><span class="s3">)</span>
+<a name="l276"><span class="ln">276  </span></a><span class="s1">print</span><span class="s3">(</span><span class="s5">f&quot;Average time cost of successful experiments: </span><span class="s2">{</span><span class="s1">np</span><span class="s3">.</span><span class="s1">mean</span><span class="s3">([</span><span class="s1">t </span><span class="s2">for </span><span class="s1">t </span><span class="s2">in </span><span class="s1">time_cost </span><span class="s2">if </span><span class="s1">t</span><span class="s3">&lt;</span><span class="s4">99</span><span class="s3">])</span><span class="s2">}</span><span class="s5">&quot;</span><span class="s3">)</span>
+<a name="l277"><span class="ln">277  </span></a><span class="s1">print</span><span class="s3">(</span><span class="s5">f&quot;Number of fails: </span><span class="s2">{</span><span class="s1">num_fails</span><span class="s2">}</span><span class="s5">&quot;</span><span class="s3">)</span></pre>
+</body>
+</html>

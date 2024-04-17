@@ -1,0 +1,95 @@
+<html>
+<head>
+<title>q_learning.py</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cf8e6d;}
+.s1 { color: #bcbec4;}
+.s2 { color: #bcbec4;}
+.s3 { color: #2aacb8;}
+.s4 { color: #7a7e85;}
+.s5 { color: #6aab73;}
+.ln { color: #4b5059; font-weight: normal; font-style: normal; }
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+q_learning.py</font>
+</center></td></tr></table>
+<pre><a name="l1"><span class="ln">1    </span></a><span class="s0">from </span><span class="s1">models</span><span class="s2">.</span><span class="s1">q_learning</span><span class="s2">.</span><span class="s1">q_learning_learner </span><span class="s0">import </span><span class="s1">QLearning</span>
+<a name="l2"><span class="ln">2    </span></a><span class="s0">import </span><span class="s1">numpy </span><span class="s0">as </span><span class="s1">np</span>
+<a name="l3"><span class="ln">3    </span></a>
+<a name="l4"><span class="ln">4    </span></a><span class="s1">PRECISE </span><span class="s2">= </span><span class="s3">0</span>
+<a name="l5"><span class="ln">5    </span></a><span class="s1">NOISY </span><span class="s2">= </span><span class="s3">1</span>
+<a name="l6"><span class="ln">6    </span></a>
+<a name="l7"><span class="ln">7    </span></a><span class="s1">DISCRETIZATION_RESOLUTION </span><span class="s2">= </span><span class="s3">10</span>
+<a name="l8"><span class="ln">8    </span></a>
+<a name="l9"><span class="ln">9    </span></a>
+<a name="l10"><span class="ln">10   </span></a><span class="s0">def </span><span class="s1">discretize_state_and_confidence</span><span class="s2">(</span><span class="s1">obs</span><span class="s2">, </span><span class="s1">confidence</span><span class="s2">):</span>
+<a name="l11"><span class="ln">11   </span></a>    <span class="s4"># convert confidence into 0 to 9</span>
+<a name="l12"><span class="ln">12   </span></a>    <span class="s1">confidence_bin </span><span class="s2">= </span><span class="s1">int</span><span class="s2">(</span><span class="s1">round</span><span class="s2">(</span><span class="s1">confidence </span><span class="s2">* (</span><span class="s1">DISCRETIZATION_RESOLUTION </span><span class="s2">- </span><span class="s3">1</span><span class="s2">)))</span>
+<a name="l13"><span class="ln">13   </span></a>    <span class="s0">assert </span><span class="s3">0 </span><span class="s2">&lt;= </span><span class="s1">confidence_bin </span><span class="s2">&lt;= </span><span class="s3">9</span>
+<a name="l14"><span class="ln">14   </span></a>    <span class="s1">v </span><span class="s2">= </span><span class="s1">obs </span><span class="s2">* </span><span class="s1">DISCRETIZATION_RESOLUTION </span><span class="s2">+ </span><span class="s1">confidence_bin</span>
+<a name="l15"><span class="ln">15   </span></a>    <span class="s0">assert </span><span class="s3">0 </span><span class="s2">&lt;= </span><span class="s1">v </span><span class="s2">&lt;= </span><span class="s3">489</span><span class="s2">, </span><span class="s5">f&quot;obs </span><span class="s0">{</span><span class="s1">obs</span><span class="s0">}</span><span class="s5">, confidence </span><span class="s0">{</span><span class="s1">confidence</span><span class="s0">}</span><span class="s5">, confidence_bin </span><span class="s0">{</span><span class="s1">confidence_bin</span><span class="s0">}</span><span class="s5">, v </span><span class="s0">{</span><span class="s1">v</span><span class="s0">}</span><span class="s5">&quot;</span>
+<a name="l16"><span class="ln">16   </span></a>    <span class="s0">return </span><span class="s1">v</span>
+<a name="l17"><span class="ln">17   </span></a>
+<a name="l18"><span class="ln">18   </span></a>
+<a name="l19"><span class="ln">19   </span></a><span class="s0">def </span><span class="s1">learn</span><span class="s2">(</span><span class="s1">env</span><span class="s2">, </span><span class="s1">scene</span><span class="s2">, </span><span class="s1">max_it</span><span class="s2">, </span><span class="s1">epsilon</span><span class="s2">, </span><span class="s1">alpha</span><span class="s2">, </span><span class="s1">obs_mode</span><span class="s2">, **</span><span class="s1">kwargs</span><span class="s2">):</span>
+<a name="l20"><span class="ln">20   </span></a>    <span class="s1">num_state </span><span class="s2">= </span><span class="s0">None</span>
+<a name="l21"><span class="ln">21   </span></a>    <span class="s0">if </span><span class="s1">obs_mode </span><span class="s2">== </span><span class="s1">PRECISE</span><span class="s2">:</span>
+<a name="l22"><span class="ln">22   </span></a>        <span class="s1">num_state </span><span class="s2">= </span><span class="s1">env</span><span class="s2">.</span><span class="s1">num_states</span>
+<a name="l23"><span class="ln">23   </span></a>    <span class="s0">elif </span><span class="s1">obs_mode </span><span class="s2">== </span><span class="s1">NOISY</span><span class="s2">:</span>
+<a name="l24"><span class="ln">24   </span></a>        <span class="s1">num_state </span><span class="s2">= </span><span class="s1">env</span><span class="s2">.</span><span class="s1">num_states </span><span class="s2">* </span><span class="s1">DISCRETIZATION_RESOLUTION</span>
+<a name="l25"><span class="ln">25   </span></a>    <span class="s1">agent </span><span class="s2">= </span><span class="s1">QLearning</span><span class="s2">(</span><span class="s1">env</span><span class="s2">, </span><span class="s1">scene</span><span class="s2">=</span><span class="s1">scene</span><span class="s2">, </span><span class="s1">epsilon</span><span class="s2">=</span><span class="s1">epsilon</span><span class="s2">, </span><span class="s1">alpha</span><span class="s2">=</span><span class="s1">alpha</span><span class="s2">, </span><span class="s1">num_states</span><span class="s2">=</span><span class="s1">num_state</span><span class="s2">)</span>
+<a name="l26"><span class="ln">26   </span></a>
+<a name="l27"><span class="ln">27   </span></a>    <span class="s0">for </span><span class="s1">episode </span><span class="s0">in </span><span class="s1">range</span><span class="s2">(</span><span class="s1">int</span><span class="s2">(</span><span class="s1">max_it</span><span class="s2">)):</span>
+<a name="l28"><span class="ln">28   </span></a>        <span class="s4"># Initialize S</span>
+<a name="l29"><span class="ln">29   </span></a>        <span class="s1">env</span><span class="s2">.</span><span class="s1">reset</span><span class="s2">()</span>
+<a name="l30"><span class="ln">30   </span></a>        <span class="s1">done </span><span class="s2">= </span><span class="s0">False</span>
+<a name="l31"><span class="ln">31   </span></a>
+<a name="l32"><span class="ln">32   </span></a>        <span class="s1">return_per_episode </span><span class="s2">= </span><span class="s3">0</span>
+<a name="l33"><span class="ln">33   </span></a>        <span class="s0">while not </span><span class="s1">done</span><span class="s2">:</span>
+<a name="l34"><span class="ln">34   </span></a>            <span class="s1">s </span><span class="s2">= </span><span class="s1">env</span><span class="s2">.</span><span class="s1">s</span>
+<a name="l35"><span class="ln">35   </span></a>            <span class="s4"># Choose A from S using episilon-greedy policy</span>
+<a name="l36"><span class="ln">36   </span></a>            <span class="s1">a </span><span class="s2">= </span><span class="s1">agent</span><span class="s2">.</span><span class="s1">get_a</span><span class="s2">(</span><span class="s1">env</span><span class="s2">.</span><span class="s1">s</span><span class="s2">, </span><span class="s1">agent</span><span class="s2">.</span><span class="s1">epsilon</span><span class="s2">)</span>
+<a name="l37"><span class="ln">37   </span></a>            <span class="s4"># Take A, observe R, S'</span>
+<a name="l38"><span class="ln">38   </span></a>            <span class="s1">results </span><span class="s2">= </span><span class="s1">env</span><span class="s2">.</span><span class="s1">step</span><span class="s2">(</span><span class="s1">a</span><span class="s2">)</span>
+<a name="l39"><span class="ln">39   </span></a>            <span class="s0">if </span><span class="s1">len</span><span class="s2">(</span><span class="s1">results</span><span class="s2">) == </span><span class="s3">3</span><span class="s2">:</span>
+<a name="l40"><span class="ln">40   </span></a>                <span class="s1">s1</span><span class="s2">, </span><span class="s1">r</span><span class="s2">, </span><span class="s1">done </span><span class="s2">= </span><span class="s1">results</span>
+<a name="l41"><span class="ln">41   </span></a>            <span class="s0">elif </span><span class="s1">len</span><span class="s2">(</span><span class="s1">results</span><span class="s2">) == </span><span class="s3">5</span><span class="s2">:</span>
+<a name="l42"><span class="ln">42   </span></a>                <span class="s1">s1</span><span class="s2">, </span><span class="s1">r</span><span class="s2">, </span><span class="s1">done</span><span class="s2">, </span><span class="s1">s1_obs</span><span class="s2">, </span><span class="s1">confidence </span><span class="s2">= </span><span class="s1">results</span>
+<a name="l43"><span class="ln">43   </span></a>            <span class="s0">else</span><span class="s2">:</span>
+<a name="l44"><span class="ln">44   </span></a>                <span class="s0">raise </span><span class="s1">ValueError</span><span class="s2">(</span><span class="s5">f&quot;results has length </span><span class="s0">{</span><span class="s1">len</span><span class="s2">(</span><span class="s1">results</span><span class="s2">)</span><span class="s0">}</span><span class="s5">&quot;</span><span class="s2">)</span>
+<a name="l45"><span class="ln">45   </span></a>
+<a name="l46"><span class="ln">46   </span></a>            <span class="s0">if </span><span class="s1">obs_mode </span><span class="s2">== </span><span class="s1">PRECISE</span><span class="s2">:</span>
+<a name="l47"><span class="ln">47   </span></a>                <span class="s1">agent</span><span class="s2">.</span><span class="s1">update_Q</span><span class="s2">(</span><span class="s1">s</span><span class="s2">, </span><span class="s1">a</span><span class="s2">, </span><span class="s1">r</span><span class="s2">, </span><span class="s1">s1</span><span class="s2">, </span><span class="s0">None</span><span class="s2">, </span><span class="s1">done</span><span class="s2">)</span>
+<a name="l48"><span class="ln">48   </span></a>            <span class="s0">elif </span><span class="s1">obs_mode </span><span class="s2">== </span><span class="s1">NOISY</span><span class="s2">:</span>
+<a name="l49"><span class="ln">49   </span></a>                <span class="s1">s_obs</span><span class="s2">, </span><span class="s1">s_confidence </span><span class="s2">= </span><span class="s1">env</span><span class="s2">.</span><span class="s1">get_obs</span><span class="s2">(</span><span class="s1">s</span><span class="s2">)</span>
+<a name="l50"><span class="ln">50   </span></a>                <span class="s0">assert </span><span class="s3">0 </span><span class="s2">&lt;= </span><span class="s1">s1_obs </span><span class="s2">&lt;&lt; </span><span class="s1">env</span><span class="s2">.</span><span class="s1">num_states</span>
+<a name="l51"><span class="ln">51   </span></a>                <span class="s0">assert </span><span class="s3">0 </span><span class="s2">&lt;= </span><span class="s1">s_obs </span><span class="s2">&lt;&lt; </span><span class="s1">env</span><span class="s2">.</span><span class="s1">num_states</span>
+<a name="l52"><span class="ln">52   </span></a>                <span class="s4"># get possible r of wrong_s</span>
+<a name="l53"><span class="ln">53   </span></a>                <span class="s1">wrong_r </span><span class="s2">= </span><span class="s1">env</span><span class="s2">.</span><span class="s1">get_possible_wrong_r</span><span class="s2">(</span><span class="s1">s1</span><span class="s2">)</span>
+<a name="l54"><span class="ln">54   </span></a>                <span class="s1">r_biased </span><span class="s2">= </span><span class="s1">r </span><span class="s2">+ </span><span class="s1">sum</span><span class="s2">(</span><span class="s1">wrong_r</span><span class="s2">) * (</span><span class="s3">1 </span><span class="s2">- </span><span class="s1">confidence</span><span class="s2">)</span>
+<a name="l55"><span class="ln">55   </span></a>
+<a name="l56"><span class="ln">56   </span></a>                <span class="s1">s1_obs_and_c </span><span class="s2">= </span><span class="s1">discretize_state_and_confidence</span><span class="s2">(</span><span class="s1">s1_obs</span><span class="s2">, </span><span class="s1">confidence</span><span class="s2">)</span>
+<a name="l57"><span class="ln">57   </span></a>                <span class="s1">s_obs_and_c </span><span class="s2">= </span><span class="s1">discretize_state_and_confidence</span><span class="s2">(</span><span class="s1">s_obs</span><span class="s2">, </span><span class="s1">s_confidence</span><span class="s2">)</span>
+<a name="l58"><span class="ln">58   </span></a>                <span class="s1">agent</span><span class="s2">.</span><span class="s1">update_Q</span><span class="s2">(</span><span class="s1">s_obs_and_c</span><span class="s2">, </span><span class="s1">a</span><span class="s2">, </span><span class="s1">r_biased</span><span class="s2">, </span><span class="s1">s1_obs_and_c</span><span class="s2">, </span><span class="s0">None</span><span class="s2">, </span><span class="s1">done</span><span class="s2">)</span>
+<a name="l59"><span class="ln">59   </span></a>            <span class="s0">else</span><span class="s2">:</span>
+<a name="l60"><span class="ln">60   </span></a>                <span class="s1">agent</span><span class="s2">.</span><span class="s1">update_Q</span><span class="s2">(</span><span class="s1">s</span><span class="s2">, </span><span class="s1">a</span><span class="s2">, </span><span class="s1">r</span><span class="s2">, </span><span class="s1">s1</span><span class="s2">, </span><span class="s0">None</span><span class="s2">, </span><span class="s1">done</span><span class="s2">)</span>
+<a name="l61"><span class="ln">61   </span></a>
+<a name="l62"><span class="ln">62   </span></a>            <span class="s1">return_per_episode </span><span class="s2">+= </span><span class="s1">r</span>
+<a name="l63"><span class="ln">63   </span></a>
+<a name="l64"><span class="ln">64   </span></a>        <span class="s4"># print(agent.Q)</span>
+<a name="l65"><span class="ln">65   </span></a>        <span class="s4"># print(np.linalg.norm(agent.Q-old_q))</span>
+<a name="l66"><span class="ln">66   </span></a>        <span class="s4"># agent.plot.add('return_per_episode', return_per_episode, xlabel='episode', ylabel='return',</span>
+<a name="l67"><span class="ln">67   </span></a>        <span class="s4">#                title='Return per Episode of ' + agent.algorithm + ' in ' + agent.scene)</span>
+<a name="l68"><span class="ln">68   </span></a>        <span class="s4">#</span>
+<a name="l69"><span class="ln">69   </span></a>        <span class="s0">if </span><span class="s1">episode </span><span class="s2">% (</span><span class="s3">0.1 </span><span class="s2">* </span><span class="s1">max_it</span><span class="s2">) == </span><span class="s3">0</span><span class="s2">:</span>
+<a name="l70"><span class="ln">70   </span></a>            <span class="s1">print</span><span class="s2">(</span><span class="s5">f'Episode </span><span class="s0">{</span><span class="s1">episode</span><span class="s0">} </span><span class="s5">of </span><span class="s0">{</span><span class="s1">max_it</span><span class="s0">} </span><span class="s5">finished'</span><span class="s2">)</span>
+<a name="l71"><span class="ln">71   </span></a>
+<a name="l72"><span class="ln">72   </span></a>    <span class="s0">return </span><span class="s1">agent</span>
+<a name="l73"><span class="ln">73   </span></a></pre>
+</body>
+</html>
