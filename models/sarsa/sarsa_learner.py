@@ -18,3 +18,9 @@ class SARSA(ModelFreeAlg):
 
     def Q_s_(self, s_, a_):
         return self.get_Q(s_, a_)
+
+    def get_a(self, s, epsilon, alpha=np.array([1, 1, 1, 1])):
+        if np.random.random() < epsilon:
+            return np.random.randint(self.env.num_actions)
+        else:
+            return np.argmax(self.get_Q(s) * alpha)

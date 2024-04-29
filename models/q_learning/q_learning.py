@@ -16,12 +16,9 @@ def discretize_state_and_confidence(obs, confidence):
     return v
 
 
-def learn(env, scene, max_it, epsilon, alpha, obs_mode, **kwargs):
+def learn(env, scene, max_it, epsilon, alpha, epsilon_decay, **kwargs):
     num_state = None
-    if obs_mode == PRECISE:
-        num_state = env.num_states
-    elif obs_mode == NOISY:
-        num_state = env.num_states * DISCRETIZATION_RESOLUTION
+
     agent = QLearning(env, scene=scene, epsilon=epsilon, alpha=alpha, num_states=num_state)
 
     for episode in range(int(max_it)):
@@ -30,36 +27,36 @@ def learn(env, scene, max_it, epsilon, alpha, obs_mode, **kwargs):
         done = False
 
         return_per_episode = 0
+        alpha_hat = np.array([0.0, 0.0, 0.0, 0.0])
+        n_a = np.zeros(4)
+        n_a_a = np.zeros(4)
         while not done:
+            min_a = None
+            if np.all(alpha_hat > 0):
+                agent.epsilon *= epsilon_decay
+            else:
+                alpha_hat_ = np.array([1.0, 1.0, 1.0, 1.0])
+                # pick which n_a_a is smallest
+                min_a = np.argmin(alpha_hat)
+
             s = env.s
-            # Choose A from S using episilon-greedy policy
-            a = agent.get_a(env.s, agent.epsilon)
-            # Take A, observe R, S'
-            results = env.step(a)
-            if len(results) == 3:
-                s1, r, done = results
-            elif len(results) == 5:
-                s1, r, done, s1_obs, confidence = results
+            if min_a is not None:
+                a = min_a
             else:
-                raise ValueError(f"results has length {len(results)}")
+                a = agent.get_a(env.s, agent.epsilon, np.array([1.0, 1.0, 1.0, 1.0]))
+            s_, r, done, success = env.step(a)
 
-            if obs_mode == PRECISE:
-                agent.update_Q(s, a, r, s1, None, done)
-            elif obs_mode == NOISY:
-                s_obs, s_confidence = env.get_obs(s)
-                assert 0 <= s1_obs << env.num_states
-                assert 0 <= s_obs << env.num_states
-                # get possible r of wrong_s
-                wrong_r = env.get_possible_wrong_r(s1)
-                r_biased = r + sum(wrong_r) * (1 - confidence)
+            n_a[a] += 1
+            if success:
+                n_a_a[a] += 1
+            if n_a_a[a] > 3:
+                alpha_hat[a] = float(n_a_a[a] / n_a[a])
 
-                s1_obs_and_c = discretize_state_and_confidence(s1_obs, confidence)
-                s_obs_and_c = discretize_state_and_confidence(s_obs, s_confidence)
-                agent.update_Q(s_obs_and_c, a, r_biased, s1_obs_and_c, None, done)
-            else:
-                agent.update_Q(s, a, r, s1, None, done)
+            discount = n_a[a] / 5
+            if discount > 1:
+                discount = 1
 
-            return_per_episode += r
+            agent.update_Q(s, a, r * alpha_hat[a] * discount, s_, None, done)
 
         # print(agent.Q)
         # print(np.linalg.norm(agent.Q-old_q))
@@ -67,6 +64,6 @@ def learn(env, scene, max_it, epsilon, alpha, obs_mode, **kwargs):
         #                title='Return per Episode of ' + agent.algorithm + ' in ' + agent.scene)
         #
         if episode % (0.1 * max_it) == 0:
-            print(f'Episode {episode} of {max_it} finished')
+            print(f'Episode {episode} of {max_it} finished, steps {env.num_steps}')
 
     return agent

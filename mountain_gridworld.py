@@ -1,4 +1,5 @@
 import random
+import numpy as np
 
 # altitude is a 7 by 7 grid
 altitude_lut = [[5, 3, 4, 2, 0, 0, 4],
@@ -36,15 +37,17 @@ class MountainGridWorld():
     If you specify hard_version=True, then the action will be selected uniformly at random 10% of the time.
     """
 
-    def __init__(self, hard_version=False):
+    def __init__(self, perfect_obs=False, max_num_steps=1000):
         self.num_states = 49
         self.num_actions = 4
         self.last_action = None
-        self.max_num_steps = 1000
+        self.max_num_steps = max_num_steps
         self.state_shape = (7, 7)
         self.state_names = ['x', 'y']
         self.start_state = 8
         self.end_state = 37
+        self.perfect_obs = perfect_obs
+        self.end_pos = self.get_pos(self.end_state)
         self.reset()
 
     def altitude(self, s):
@@ -68,14 +71,18 @@ class MountainGridWorld():
         elif s < 0 or s >= 49:
             return -10
         else:
-            return -1  # time penalty
+            pos = self.get_pos(s)
+            # return the distance to the goal
+            return -np.sqrt(abs(pos[0] - self.end_pos[0])**2 + abs(pos[1] - self.end_pos[1])**2)
 
     def step(self, a, verbose=False):
         last_s = self.s
 
         # real s1
-        s1 = self.apply_action_with_uncertainty(self.s, a)
+        s1, success = self.apply_action_with_uncertainty(self.s, a)
         r = self.r(s1)
+        if r == -10:
+            s1 = last_s
         done = self.is_done(s1)
         # print("from state", self.s, "action", a, "to state", s1, "reward", r, "done", done)
 
@@ -83,6 +90,8 @@ class MountainGridWorld():
             s1 = self.s
             obs = s1
             confidence = 1
+        elif self.perfect_obs:
+            self.s = s1
         else:
             # noisy obs
             obs, confidence = self.get_obs(s1)
@@ -94,7 +103,10 @@ class MountainGridWorld():
 
         # if done:
         #     print(f"done at {self.num_steps} steps")
-        return s1, r, done, obs, confidence
+        if self.perfect_obs:
+            return s1, r, done, success
+        else:
+            return s1, r, done, obs, confidence
 
     def get_next_obs_and_confidence(self, s1, obs, a):
         s1_obs = self.apply_action(obs, a)
@@ -158,14 +170,14 @@ class MountainGridWorld():
         possible_actions = self.get_possible_actions(s)
         # if move is impossible, move the state to -1 for penalty
         if a not in possible_actions:
-            return -1
+            return -1, True
         possible_actions.remove(a)
         if random.uniform(0, 1) < accurate_p:
             # accurate
-            return self.apply_action(s, a)
+            return self.apply_action(s, a), True
         else:
             random_action = random.choice(self.get_possible_actions(s, a))
-            return self.apply_action(s, random_action)
+            return self.apply_action(s, random_action), False
 
     def get_possible_wrong_obs(self, s):
         possible_actions = self.get_possible_actions(s)
